@@ -1,0 +1,48 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: sanctra-postgres
+    environment:
+      POSTGRES_DB: sanctra
+      POSTGRES_USER: sanctra
+      POSTGRES_PASSWORD: sanctra
+    ports:
+      - '5432:5432'
+    volumes:
+      - sanctra-postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U sanctra -d sanctra']
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  redis:
+    image: redis:7-alpine
+    container_name: sanctra-redis
+    ports:
+      - '6379:6379'
+    volumes:
+      - sanctra-redis-data:/data
+    healthcheck:
+      test: ['CMD', 'redis-cli', 'ping']
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  minio:
+    image: minio/minio:latest
+    container_name: sanctra-minio
+    command: server /data --console-address ':9001'
+    environment:
+      MINIO_ROOT_USER: sanctra
+      MINIO_ROOT_PASSWORD: sanctra-local-secret
+    ports:
+      - '9000:9000'
+      - '9001:9001'
+    volumes:
+      - sanctra-minio-data:/data
+
+volumes:
+  sanctra-postgres-data:
+  sanctra-redis-data:
+  sanctra-minio-data:

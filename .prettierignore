@@ -1,0 +1,8 @@
+node_modules
+dist
+coverage
+.git
+upload
+qa
+packages/database/generated
+pnpm-lock.yaml

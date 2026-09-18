@@ -1,0 +1,19 @@
+node_modules/
+dist/
+coverage/
+.cache/
+.turbo/
+.env
+.env.*
+!.env.example
+*.log
+.DS_Store
+
+# Local document-review artifacts supplied outside the repository.
+/upload/
+/qa/
+
+# Prisma generated artifacts and local database state.
+packages/database/generated/
+*.db
+*.db-journal

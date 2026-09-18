@@ -1,0 +1,194 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Plan {
+  FREE
+  PRO
+  TEAM
+}
+
+enum AnalysisStatus {
+  QUEUED
+  RUNNING
+  SUCCEEDED
+  WARNING
+  FAILED
+  BLOCKED
+}
+
+enum GenerationStatus {
+  QUEUED
+  RUNNING
+  SUCCEEDED
+  WARNING
+  FAILED
+  BLOCKED
+}
+
+enum FileOperation {
+  CREATE
+  UPDATE
+  SKIP
+  CONFLICT
+}
+
+model User {
+  id                 String         @id @default(uuid())
+  githubUserId       String         @unique
+  login              String
+  email              String?
+  avatarUrl          String?
+  ownedOrganizations Organization[] @relation("OrganizationOwner")
+  memberships        Membership[]
+  auditLogs          AuditLog[]
+  createdAt          DateTime       @default(now())
+  updatedAt          DateTime       @updatedAt
+}
+
+model Organization {
+  id            String               @id @default(uuid())
+  name          String
+  ownerUserId   String
+  plan          Plan                 @default(FREE)
+  owner         User                 @relation("OrganizationOwner", fields: [ownerUserId], references: [id])
+  memberships   Membership[]
+  installations GitHubInstallation[]
+  usageRecords  UsageRecord[]
+  createdAt     DateTime             @default(now())
+  updatedAt     DateTime             @updatedAt
+}
+
+model Membership {
+  organizationId String
+  userId         String
+  role           String
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  user           User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@id([organizationId, userId])
+}
+
+model GitHubInstallation {
+  id             String        @id @default(uuid())
+  installationId String        @unique
+  accountType    String
+  accountLogin   String
+  organizationId String?
+  organization   Organization? @relation(fields: [organizationId], references: [id], onDelete: SetNull)
+  repositories   Repository[]
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
+}
+
+model Repository {
+  id             String             @id @default(uuid())
+  githubRepoId   String
+  installationId String
+  owner          String
+  name           String
+  defaultBranch  String
+  private        Boolean
+  installation   GitHubInstallation @relation(fields: [installationId], references: [id], onDelete: Cascade)
+  analyses       AnalysisRun[]
+  createdAt      DateTime           @default(now())
+  updatedAt      DateTime           @updatedAt
+
+  @@unique([installationId, githubRepoId])
+}
+
+model AnalysisRun {
+  id              String          @id @default(uuid())
+  repositoryId    String
+  commitSha       String
+  status          AnalysisStatus  @default(QUEUED)
+  score           Int?
+  detectorVersion String
+  repository      Repository      @relation(fields: [repositoryId], references: [id], onDelete: Cascade)
+  findings        Finding[]
+  generations     GenerationRun[]
+  createdAt       DateTime        @default(now())
+  startedAt       DateTime?
+  completedAt     DateTime?
+
+  @@unique([repositoryId, commitSha, detectorVersion])
+  @@index([repositoryId, createdAt])
+}
+
+model Finding {
+  id             String      @id @default(uuid())
+  analysisRunId  String
+  type           String
+  severity       String
+  evidence       Json
+  recommendation String
+  analysisRun    AnalysisRun @relation(fields: [analysisRunId], references: [id], onDelete: Cascade)
+  createdAt      DateTime    @default(now())
+}
+
+model GenerationRun {
+  id              String             @id @default(uuid())
+  analysisRunId   String
+  target          String
+  status          GenerationStatus   @default(QUEUED)
+  templateVersion String
+  analysisRun     AnalysisRun        @relation(fields: [analysisRunId], references: [id], onDelete: Cascade)
+  files           GeneratedFile[]
+  pullRequest     PullRequestRecord?
+  createdAt       DateTime           @default(now())
+  completedAt     DateTime?
+
+  @@unique([analysisRunId, target, templateVersion])
+}
+
+model GeneratedFile {
+  id              String        @id @default(uuid())
+  generationRunId String
+  path            String
+  operation       FileOperation
+  contentHash     String
+  validationState String
+  generationRun   GenerationRun @relation(fields: [generationRunId], references: [id], onDelete: Cascade)
+
+  @@unique([generationRunId, path])
+}
+
+model PullRequestRecord {
+  id              String        @id @default(uuid())
+  generationRunId String        @unique
+  branch          String
+  number          Int
+  url             String
+  state           String
+  generationRun   GenerationRun @relation(fields: [generationRunId], references: [id], onDelete: Cascade)
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+}
+
+model AuditLog {
+  id        String   @id @default(uuid())
+  actorId   String?
+  action    String
+  resource  String
+  metadata  Json
+  actor     User?    @relation(fields: [actorId], references: [id], onDelete: SetNull)
+  createdAt DateTime @default(now())
+
+  @@index([resource, createdAt])
+}
+
+model UsageRecord {
+  id             String       @id @default(uuid())
+  organizationId String
+  metric         String
+  quantity       Int
+  period         DateTime
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  @@unique([organizationId, metric, period])
+}

@@ -1,0 +1,21 @@
+{
+  "name": "@sanctra/database",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "build": "prisma generate",
+    "lint": "prisma format --check",
+    "lint:fix": "prisma format",
+    "prisma:generate": "prisma generate",
+    "prisma:migrate": "prisma migrate dev --name init",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@prisma/client": "^6.16.2"
+  },
+  "devDependencies": {
+    "@types/node": "^24.3.1",
+    "prisma": "^6.16.2",
+    "typescript": "^5.9.2"
+  }
+}
