@@ -2,8 +2,16 @@
   "name": "@sanctra/database",
   "version": "0.1.0",
   "private": true,
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    }
+  },
   "scripts": {
-    "build": "prisma generate",
+    "build": "prisma generate && tsc -p tsconfig.json",
     "lint": "prisma format --check",
     "lint:fix": "prisma format",
     "prisma:generate": "prisma generate",

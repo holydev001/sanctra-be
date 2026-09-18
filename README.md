@@ -41,6 +41,30 @@ pnpm dev:api
 
 The API will be available at `http://localhost:3000`. The health endpoint is `GET /health` and the versioned API base is `/v1`.
 
+## GitHub sign-in configuration
+
+Create a GitHub OAuth App and set its callback URL to:
+
+```text
+http://localhost:3000/v1/auth/github/callback
+```
+
+Copy the client ID and secret into `GITHUB_OAUTH_CLIENT_ID` and
+`GITHUB_OAUTH_CLIENT_SECRET`. Set `WEB_APP_URL` to the frontend origin. The API
+uses Redis for one-time OAuth state values and PostgreSQL for opaque sessions.
+
+Authentication endpoints:
+
+```text
+GET  /v1/auth/github
+GET  /v1/auth/github/callback
+GET  /v1/auth/me
+POST /v1/auth/logout
+```
+
+The GitHub OAuth flow requests only `read:user user:email`. Repository access is
+handled separately by the Sanctra GitHub App installation flow.
+
 Run the worker in a second terminal:
 
 ```bash
