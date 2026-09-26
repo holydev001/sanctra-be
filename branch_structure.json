@@ -1,0 +1,21 @@
+{
+  "default_branch": "dev",
+  "branches": [
+    "dev",
+    "feat/github-signup",
+    "main",
+    "origin"
+  ],
+  "parent": {
+    "dev": null,
+    "feat/github-signup": "dev",
+    "main": "dev",
+    "origin": "dev"
+  },
+  "order": [
+    "dev",
+    "feat/github-signup",
+    "main",
+    "origin"
+  ]
+}

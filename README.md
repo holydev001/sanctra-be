@@ -39,6 +39,16 @@ pnpm prisma:migrate
 pnpm dev:api
 ```
 
+On Windows PowerShell, copy the environment file with:
+
+```powershell
+Copy-Item .env.example .env
+```
+
+Before starting the API, set `GITHUB_OAUTH_CLIENT_ID` and
+`GITHUB_OAUTH_CLIENT_SECRET` in `.env`. Keep `.env` local; it must not be
+committed.
+
 The API will be available at `http://localhost:3000`. The health endpoint is `GET /health` and the versioned API base is `/v1`.
 
 ## GitHub sign-in configuration
@@ -61,6 +71,36 @@ GET  /v1/auth/github/callback
 GET  /v1/auth/me
 POST /v1/auth/logout
 ```
+
+## Frontend integration smoke test
+
+Start the frontend at the origin configured by `WEB_APP_URL` (default
+`http://localhost:5173`). The sign-in button should navigate to:
+
+```text
+http://localhost:3000/v1/auth/github
+```
+
+After GitHub redirects back to the API, the API redirects to
+`http://localhost:5173/auth/callback`. The frontend should then verify the
+session with credentials enabled:
+
+```ts
+await fetch('http://localhost:3000/v1/auth/me', {
+  credentials: 'include',
+});
+```
+
+Logout uses the same option:
+
+```ts
+await fetch('http://localhost:3000/v1/auth/logout', {
+  method: 'POST',
+  credentials: 'include',
+});
+```
+
+Use `GET http://localhost:3000/health` to confirm that the API is running.
 
 The GitHub OAuth flow requests only `read:user user:email`. Repository access is
 handled separately by the Sanctra GitHub App installation flow.
